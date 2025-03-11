@@ -13,17 +13,20 @@ Adafruit_VL53L0X loxFrontal = Adafruit_VL53L0X();
 Adafruit_VL53L0X loxLateral = Adafruit_VL53L0X();
 
 // Definición de pines para el puente H L9110
-#define Motor_B1 2   
-#define Motor_B2 4   
-#define Motor_A1 18  
-#define Motor_A2 19  
+
+#define Motor_B1 2   // PWM
+#define Motor_B2 4   // PWM
+#define Motor_A1 18  // PWM
+#define Motor_A2 19  // PWM
 
 // Pines de control de encendido de los sensores
 #define XSHUT_FRONTAL 15
 #define XSHUT_LATERAL 16
 
-void setup() {
+// Variable para la potencia del motor (0-255)
+int potencia = 100;
 
+void setup() {
     Serial.begin(9600);
     Serial.println("Iniciando sensores VL53L0X...");
 
@@ -87,37 +90,37 @@ float Medir_VL53L0X(Adafruit_VL53L0X &sensor) {
     return (medida.RangeStatus != 4) ? medida.RangeMilliMeter : 9999; // 9999 indica fuera de rango
 }
 
-void adelante() {
-    analogWrite(Motor_A1, HIGH);
-    analogWrite(Motor_A2, LOW);
-    analogWrite(Motor_B1, HIGH);
-    analogWrite(Motor_B2, LOW);
+void izquierda() {
+    analogWrite(Motor_A1, potencia);
+    analogWrite(Motor_A2, 0);
+    analogWrite(Motor_B1, potencia);
+    analogWrite(Motor_B2, 0);
 }
 
 void atras() {
-    analogWrite(Motor_A1, LOW);
-    analogWrite(Motor_A2, HIGH);
-    analogWrite(Motor_B1, LOW);
-    analogWrite(Motor_B2, HIGH);
+    analogWrite(Motor_A1, 0);
+    analogWrite(Motor_A2, potencia);
+    analogWrite(Motor_B1, 0);
+    analogWrite(Motor_B2, potencia);
 }
 
-void izquierda() {
-    analogWrite(Motor_A1, HIGH);
-    analogWrite(Motor_A2, LOW);
-    analogWrite(Motor_B1, LOW);
-    analogWrite(Motor_B2, HIGH);
+void adelante() {
+    analogWrite(Motor_A1, potencia);
+    analogWrite(Motor_A2, 0);
+    analogWrite(Motor_B1, 0);
+    analogWrite(Motor_B2, potencia);
 }
 
 void derecha() {
-    analogWrite(Motor_A1, LOW);
-    analogWrite(Motor_A2, HIGH);
-    analogWrite(Motor_B1, HIGH);
-    analogWrite(Motor_B2, LOW);
+    analogWrite(Motor_A1, 0);
+    analogWrite(Motor_A2, potencia);
+    analogWrite(Motor_B1, potencia);
+    analogWrite(Motor_B2, 0);
 }
 
 void detener() {
-    analogWrite(Motor_A1, LOW);
-    analogWrite(Motor_A2, LOW);
-    analogWrite(Motor_B1, LOW);
-    analogWrite(Motor_B2, LOW);
+    analogWrite(Motor_A1, 0);
+    analogWrite(Motor_A2, 0);
+    analogWrite(Motor_B1, 0);
+    analogWrite(Motor_B2, 0);
 }
