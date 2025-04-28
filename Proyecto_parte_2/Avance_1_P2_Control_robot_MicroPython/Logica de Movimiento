@@ -1,0 +1,103 @@
+from MPU6050 import MPU6050
+from motores import Motores
+from sensores import SensoresLaser
+from matriz import MatrizLED
+import time
+import machine
+
+# Configuración
+velocidad_inicial, velocidad_final, velocidad_giro = 600, 400, 750
+umbral_obstaculo = 130
+
+ejey = 70
+ejex = 50
+cuadriculas = 10
+
+Ncuadriculasy = ejey // cuadriculas
+Ncuadriculasx = ejex // cuadriculas
+print(Ncuadriculasx, Ncuadriculasy)
+time.sleep_ms(5000)
+
+coordenada = (6, 4)  # <-- Mejor definir explícitamente como tupla
+
+# Inicialización de componentes
+def inicializar_componente(nombre, clase):
+    try:
+        print(f"Inicializando {nombre}...")
+        componente = clase()
+        print(f"{nombre} inicializado correctamente.")
+        return componente
+    except Exception as e:
+        print(f"Error al inicializar {nombre}: {e}")
+        machine.reset()
+
+mpu = inicializar_componente("MPU6050", MPU6050)
+motores = inicializar_componente("Motores", Motores)
+sensores = inicializar_componente("SensoresLaser", SensoresLaser)
+# matriz = inicializar_componente("MatrizLED", MatrizLED)
+
+# Bucle principal
+try:
+    print("Empezando movimiento inicial...")
+    # matriz.flecha_adelante()
+    motores.mover_adelante(velocidad_inicial)
+    time.sleep_ms(300)
+    motores.mover_adelante(velocidad_final)
+
+    while True:
+        distancia_frontal, distancia_izquierda = sensores.leer_distancias()
+        yaw = mpu.actualizarYaw()
+
+        print(f"Distancia frontal: {distancia_frontal} mm, Distancia izquierda: {distancia_izquierda} mm, Yaw: {yaw:.2f} grados")
+
+        PosicionActual = (1, 2)
+
+        if PosicionActual[1] < coordenada[1]:
+            motores.mover_adelante(velocidad_inicial)
+
+        elif PosicionActual[1] > coordenada[1]:
+            motores.girar_izquierda(velocidad_giro)
+            target_yaw = yaw + 180
+            motores.mover_adelante(velocidad_inicial)
+
+        elif PosicionActual[0] == coordenada[0]:
+            if PosicionActual[0] < coordenada[0]:
+                motores.mover_adelante(velocidad_inicial)
+
+            elif PosicionActual[0] > coordenada[0]:
+                motores.girar_izquierda(velocidad_giro)
+                target_yaw = yaw + 180
+                motores.mover_adelante(velocidad_inicial)
+
+        if distancia_frontal > umbral_obstaculo:
+            # matriz.flecha_adelante()
+            motores.mover_adelante(velocidad_final)
+        else:
+            motores.detener_motores()
+            if distancia_izquierda > umbral_obstaculo:
+                print("Obstáculo al frente, Girando a la izquierda 90 grados")
+                # matriz.flecha_izquierda()
+                motores.girar_izquierda(velocidad_giro)
+                target_yaw = yaw + 90
+            else:
+                print("Obstáculo al frente, Girando a la derecha 90 grados")
+                # matriz.flecha_derecha()
+                motores.girar_derecha(velocidad_giro)
+                target_yaw = yaw - 90
+
+            while abs(mpu.actualizarYaw() - target_yaw) > 5:
+                time.sleep_ms(10)
+
+            motores.detener_motores()
+            print("Giro completado. Avanzando")
+            time.sleep_ms(200)
+
+except KeyboardInterrupt:
+    print("Deteniendo motores y sensores...")
+    motores.detener_motores()
+    # matriz.apagar()
+    print("Motores y sensores detenidos.")
+
+except Exception as e:
+    print(f"Error en el bucle principal: {e}")
+    machine.reset()
