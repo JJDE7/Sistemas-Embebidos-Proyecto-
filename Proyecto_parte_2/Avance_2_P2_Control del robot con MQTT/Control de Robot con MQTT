@@ -1,0 +1,82 @@
+from MPU6050 import MPU6050
+from motores import Motores
+from sensores import SensoresLaser
+from matriz import MatrizLED
+import time
+import machine
+import network
+from time import sleep
+from umqtt.robust import MQTTClient
+import json
+
+# Configuración
+velocidad_movimiento, velocidad_giro = 600, 400
+
+
+SSID = "Awifitesting"
+PWD = "whateverittakes"
+
+def inicializar_componente(nombre, clase):
+    try:
+        print(f"Inicializando {nombre}...")
+        componente = clase()
+        print(f"{nombre} inicializado correctamente.")
+        return componente
+    except Exception as e:
+        print(f"Error al inicializar {nombre}: {e}")
+        machine.reset()
+
+#mpu = inicializar_componente("MPU6050", MPU6050)
+#motores = inicializar_componente("Motores", Motores)
+#sensores = inicializar_componente("SensoresLaser", SensoresLaser)
+
+def wifi_connect ():
+    wlan = network.WLAN(network.STA_IF)
+    wlan.active (True)
+    wlan.connect(SSID, PWD)
+    while not wlan.isconnected():
+        sleep(1)
+    print ("connected to WiFi")
+    
+
+def message (topic, msg):
+    print(msg.decode())
+    mensaje = msg.decode()
+   
+    if mensaje == "ADELANTE" or "adelante":
+        motores.mover_adelante(velocidad_movimiento)
+        
+    elif mensaje == "DETENER" or "detener":
+        motores.detener_motores()
+        
+    elif mensaje == "DERECHA" or "derecha":
+        motores.girar_derecha(velocidad_giro)
+
+    elif mensaje == "IZQUIERDA" or "izquierda":
+        motores.girar_izquierda(velocidad_giro)
+        
+    elif mensaje == "ATRAS" or "atras":
+        motores.girar_atras(velocidad_movimiento)
+    
+client =MQTTClient("ESP32", "192.168.111.31")
+client.set_callback(message)
+
+wifi_connect()
+client.connect()
+print("Client connected")
+client.subscribe(b"test/topic")  
+
+while True:
+    
+    distancia_frontal, distancia_izquierda = sensores.leer_distancias()
+    yaw = mpu.actualizarYaw()
+
+    #print(f"Distancia frontal: {distancia_frontal} mm, Distancia izquierda: {distancia_izquierda} mm, Yaw: {yaw:.2f} grados")
+
+    #client.wait_msg()
+    client.publish(b"distancia/izquierda", str(distancia_izquierda))
+    #client.publish(b"Distancia Frontal", distancia_frontal)
+    #client.publish(b"Grados", yaw)
+
+
+    sleep(1)
