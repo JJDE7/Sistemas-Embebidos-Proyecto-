@@ -1,0 +1,113 @@
+from picamera2 import Picamera2
+import cv2
+import numpy as np
+import paho.mqtt.client as mqtt
+
+# --- Configuracion MQTT ---
+broker_ip = "192.168.221.31"   # IP de la Raspberry Pi
+mqtt_port = 1883
+topic = "camara/localizacion"
+
+client = mqtt.Client()
+client.connect(broker_ip, mqtt_port)
+client.loop_start()
+
+# --- Inicializar camara ---
+picam2 = Picamera2()
+config = picam2.create_preview_configuration(main={"format": 'RGB888', "size": (640, 480)})
+picam2.configure(config)
+picam2.start()
+
+# --- Rango HSV para detectar azul ---
+lower_color = np.array([0, 100, 100])
+upper_color = np.array([130, 255, 255])
+calibrating = False
+
+# --- Parametros de la matriz NxM ---
+rows = 6  # Numero de filas
+cols = 4  # Numero de columnas
+
+# --- Margen en pixeles ---
+margin = 60  # Puedes cambiar este valor para ajustar el espacio entrae el borde y la matriz
+
+# --- Callback para calibrar color con clic ---
+def mouse_callback(event, x, y, flags, param):
+    global lower_color, upper_color, calibrating
+    if event == cv2.EVENT_LBUTTONDOWN and calibrating:
+        pixel = hsv[y, x]
+        print(f"HSV: {pixel}")
+        lower_color = np.array([pixel[0] - 10, pixel[1] - 50, pixel[2] - 50])
+        upper_color = np.array([pixel[0] + 10, pixel[1] + 50, pixel[2] + 50])
+        print(f"Nuevo rango HSV: {lower_color} - {upper_color}")
+        calibrating = False
+
+cv2.namedWindow("Tracking")
+cv2.setMouseCallback("Tracking", mouse_callback)
+
+# --- Bucle principal ---
+while True:
+    frame = picam2.capture_array()
+    height, width, _ = frame.shape
+
+    # Definir el area util despues de aplicar el margen
+    usable_width = width - 2 * margin
+    usable_height = height - 2 * margin
+
+    cell_width = usable_width // cols
+    cell_height = usable_height // rows
+
+    hsv = cv2.cvtColor(frame, cv2.COLOR_RGB2HSV)
+    mask = cv2.inRange(hsv, lower_color, upper_color)
+
+    # Matriz para contar pixeles iluminados
+    illumination_matrix = np.zeros((rows, cols), dtype=int)
+
+    for i in range(rows):
+        for j in range(cols):
+            x1 = margin + j * cell_width
+            y1 = margin + i * cell_height
+            x2 = x1 + cell_width
+            y2 = y1 + cell_height
+
+            cell_mask = mask[y1:y2, x1:x2]
+            illumination_matrix[i, j] = cv2.countNonZero(cell_mask)
+
+            # Dibujar casilla
+            cv2.rectangle(frame, (x1, y1), (x2, y2), (255, 255, 255), 1)
+
+    # Buscar la casilla con mayor iluminacion
+    max_val = np.max(illumination_matrix)
+    max_pos = np.unravel_index(np.argmax(illumination_matrix), illumination_matrix.shape)
+
+    if max_val > 0:
+        i, j = max_pos
+        x1 = margin + j * cell_width
+        y1 = margin + i * cell_height
+        x2 = x1 + cell_width
+        y2 = y1 + cell_height
+
+        # Dibujar casilla con mayor iluminacion
+        cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 255), 3)
+        cv2.putText(frame, f"Max: ({i},{j})", (x1 + 5, y1 + 20), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 255), 2)
+
+        # Publicar por MQTT
+        coordenada = f"{i},{j}".encode("utf-8")
+        client.publish(topic, coordenada)
+        print(f"Coordenada enviada por MQTT: {coordenada.decode()}")
+
+    # Mostrar imagenes
+    cv2.imshow("Tracking", frame)
+    cv2.imshow("Mascara", mask)
+
+    key = cv2.waitKey(1) & 0xFF
+    if key == ord('q'):
+        break
+    elif key == ord('c'):
+        calibrating = True
+        print("Modo calibracion activado. Haz clic en un color.")
+
+# --- Finalizar ---
+cv2.destroyAllWindows()
+picam2.stop()
+client.loop_stop()
+client.disconnect()
