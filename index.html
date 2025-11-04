@@ -33,7 +33,8 @@
   <p><strong>Fecha y hora:</strong> <span id="fecha"></span></p>
 
   <hr>
-
+  
+  <title>Contenido de baja calidad</title>
   <!-- Imagen alojada localmente o en Cloudflare -->
   <h2>🌍 Imagen servida desde Cloudflare</h2>
   <img src="imagen-cdn.webp" alt="Ejemplo CDN Cloudflare" width="600">
@@ -47,10 +48,27 @@
     Tu navegador no soporta la reproducción de video.
   </video>
 
+  <title>Contenido de alta calidad</title>
+  
+  <!-- Imagen alojada localmente o en Cloudflare -->
+  <h2>🌍 Imagen 2 servida desde Cloudflare</h2>
+  <img src="imagen2-cdn.jpg" alt="Ejemplo CDN Cloudflare" width="600">
+
+  <hr>
+  
+    <!-- Video alojado localmente o en Cloudflare Stream -->
+  <h2>🎬 Video 2 de demostración</h2>
+  <video controls>
+    <source src="video2-cdn.mp4" type="video/mp4">
+    Tu navegador no soporta la reproducción de video.
+  </video>
+
+  
   <script>
     // Mostrar fecha y hora actual
     document.getElementById("fecha").textContent = new Date().toLocaleString();
   </script>
 </body>
 </html>
+
 
