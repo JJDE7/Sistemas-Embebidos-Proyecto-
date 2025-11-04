@@ -3,15 +3,53 @@
 <head>
   <meta charset="utf-8">
   <title>Demo CDN - Cloudflare</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background-color: #f9f9f9;
+      margin: 40px;
+    }
+
+    h1 {
+      color: #ff6600;
+    }
+
+    img, video {
+      border-radius: 10px;
+      margin-top: 20px;
+      max-width: 80%;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+
+    video {
+      margin-top: 30px;
+    }
+  </style>
 </head>
 <body>
-  <h1>Demostración del CDN con Cloudflare - Clade Telematica</h1>
-  <p>Prueba de pagina web creada para el CDN</p>
-  <p>Fecha y hora: <span id="fecha"></span></p>
+  <h1>Demostración del CDN con Cloudflare - Clase Telemática</h1>
+  <p>Prueba de página web creada para el CDN.</p>
+  <p><strong>Fecha y hora:</strong> <span id="fecha"></span></p>
+
+  <hr>
+
+  <!-- Imagen alojada localmente o en Cloudflare -->
+  <h2>🌍 Imagen servida desde Cloudflare</h2>
+  <img src="imagen-cdn.jpg" alt="Ejemplo CDN Cloudflare" width="600">
+
+  <hr>
+
+  <!-- Video alojado localmente o en Cloudflare Stream -->
+  <h2>🎬 Video de demostración</h2>
+  <video controls>
+    <source src="video-cdn.mp4" type="video/mp4">
+    Tu navegador no soporta la reproducción de video.
+  </video>
 
   <script>
-    document.getElementById("fecha").textContent = new Date().    toLocaleString();
+    // Mostrar fecha y hora actual
+    document.getElementById("fecha").textContent = new Date().toLocaleString();
   </script>
 </body>
 </html>
-
