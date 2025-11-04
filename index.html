@@ -18,12 +18,17 @@
     img, video {
       border-radius: 10px;
       margin-top: 20px;
-      max-width: 80%;
       box-shadow: 0 4px 10px rgba(0,0,0,0.2);
     }
 
-    video {
-      margin-top: 30px;
+    img {
+      max-width: 80%;
+    }
+
+    hr {
+      margin: 40px 0;
+      border: 0;
+      border-top: 2px solid #ccc;
     }
   </style>
 </head>
@@ -39,7 +44,7 @@
   <img src="imagen-cdn.webp" alt="Ejemplo CDN Cloudflare" width="600">
 
   <h2>🎬 Video de demostración</h2>
-  <video controls>
+  <video controls width="800" height="450">
     <source src="video-cdn.mp4" type="video/mp4">
     Tu navegador no soporta la reproducción de video.
   </video>
@@ -51,12 +56,13 @@
   <img src="imagen2-cdn.jpg" alt="Ejemplo CDN Cloudflare" width="600">
 
   <h2>🎬 Video 2 de demostración</h2>
-  <video controls>
+  <video controls width="900" height="500">
     <source src="video2-cdn.mp4" type="video/mp4">
     Tu navegador no soporta la reproducción de video.
   </video>
 
   <script>
+    // Mostrar fecha y hora actual
     document.getElementById("fecha").textContent = new Date().toLocaleString();
   </script>
 </body>
